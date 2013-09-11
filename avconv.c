@@ -27,6 +27,9 @@
 #include <errno.h>
 #include <signal.h>
 #include <limits.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 #include "libavformat/avformat.h"
 #include "libavdevice/avdevice.h"
 #include "libswscale/swscale.h"
@@ -121,18 +124,13 @@ static volatile int received_nb_signals = 0;
 static void
 sigterm_handler(int sig)
 {
-    received_sigterm = sig;
-    received_nb_signals++;
+    signal(sig, sigterm_handler);    
     term_exit();
 }
 
 static void term_init(void)
 {
-    signal(SIGINT , sigterm_handler); /* Interrupt (ANSI).    */
-    signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
-#ifdef SIGXCPU
-    signal(SIGXCPU, sigterm_handler);
-#endif
+    signal(SIGALRM, sigterm_handler);
 }
 
 static int decode_interrupt_cb(void *ctx)
@@ -2204,7 +2202,7 @@ static int transcode(void)
     if ((ret = init_input_threads()) < 0)
         goto fail;
 #endif
-
+    alarm(20);
     while (!received_sigterm) {
         /* check if there's any stream where output is still needed */
         if (!need_output()) {
