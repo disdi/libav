@@ -2202,7 +2202,7 @@ static int transcode(void)
     if ((ret = init_input_threads()) < 0)
         goto fail;
 #endif
-    alarm(20);
+    alarm(50);
     while (!received_sigterm) {
         /* check if there's any stream where output is still needed */
         if (!need_output()) {
